@@ -262,7 +262,15 @@
             if (!response.ok) throw new Error("API Hatası");
             const blob = await response.blob();
             const imageUrl = URL.createObjectURL(blob);
-            const imageHtml = `<div class="image-result" CLASS="IMAGE-RESULT"><span>Görsel oluşturuldu: <strong>${escapeHTML(prompt)}</strong></span><img src="${imageUrl}" alt="${escapeHTML(prompt)}" onload="this.parentElement.scrollIntoView(); document.getElementById('loading-bar').style.width='100%'; setTimeout(() => { document.getElementById('loading-bar').style.display='none'; document.getElementById('loading-bar').style.width='0%'; }, 400);"></div>`;
+            const imageHtml = `
+                <div class="image-result" CLASS="IMAGE-RESULT">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Görsel oluşturuldu: <strong>${escapeHTML(prompt)}</strong></span>
+                        <a href="${imageUrl}" download="jarvis-image.jpg" style="color: #3fb950; text-decoration: none; font-size: 12px; font-weight: bold; border: 1px solid #238636; padding: 4px 8px; border-radius: 4px;">İNDİR</a>
+                    </div>
+                    <img src="${imageUrl}" alt="${escapeHTML(prompt)}" onload="this.parentElement.scrollIntoView(); document.getElementById('loading-bar').style.width='100%'; setTimeout(() => { document.getElementById('loading-bar').style.display='none'; document.getElementById('loading-bar').style.width='0%'; }, 400);">
+                </div>
+            `;
             addMessage('jarvis', imageHtml);
             history.push({ role: "assistant", content: `[Görsel oluşturuldu: ${prompt}]` });
         } catch (e) { addMessage('jarvis', `Hata: ${e.message}`); }
