@@ -190,7 +190,12 @@
     }
 
     function clearChat() {
-        if(confirm("Tüm sohbet silinsin mi?")) { localStorage.clear(); location.reload(); }
+        if(confirm("Tüm sohbet silinsin mi?")) {
+            localStorage.clear();
+            chatBox.innerHTML = '';
+            history = [];
+            addMessage('jarvis', 'Merhaba. Ben Jarvis. Nasıl yardımcı olabilirim?', false);
+        }
     }
 
     async function generateImage(prompt) {
