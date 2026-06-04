@@ -141,11 +141,21 @@
         return html;
     }
 
+    function cleanResponse(text) {
+        // Alttire (_) ve Çince/diğer yabancı karakterleri sil
+        // Sadece Türkçe alfabesi, rakamlar ve noktalama işaretlerine izin ver
+        return text.replace(/[_]/g, '') // Alttireleri temizle
+                   .replace(/[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]/g, '') // Çince karakterleri temizle
+                   .trim();
+    }
+
     function addMessage(role, text, save = true) {
         const div = document.createElement('div');
         div.className = `msg ${role}`;
         if (role === 'jarvis') {
-            div.innerHTML = parseMarkdown(text);
+            // Yanıtı temizle
+            const cleanedText = cleanResponse(text);
+            div.innerHTML = parseMarkdown(cleanedText);
         } else {
             div.textContent = text;
         }
