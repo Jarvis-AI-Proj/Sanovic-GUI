@@ -170,7 +170,13 @@
                 body: JSON.stringify({ image: compressedBase64, prompt: englishEditPrompt })
             });
 
-            if (!response.ok) throw new Error("Vercel limitine takıldı veya API hatası.");
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({ error: "Vercel zaman aşımı." }));
+                if (response.status === 503 || response.status === 504) {
+                    throw new Error("Model şu an hazırlanıyor veya yoğun. Lütfen 10 saniye sonra tekrar deneyin.");
+                }
+                throw new Error(errData.error || "Düzenleme başarısız.");
+            }
 
             const blob = await response.blob();
             const url = URL.createObjectURL(blob);
