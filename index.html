@@ -229,13 +229,31 @@
     async function generateImage(prompt) {
         if (!prompt) return;
         loadingBar.style.display = 'block';
-        loadingBar.style.width = '30%';
+        loadingBar.style.width = '20%';
+        
         try {
+            // 1. ADIM: Türkçe promptu AI ile kaliteli İngilizce'ye çevir
+            console.log("Prompt iyileştiriliyor...");
+            const aiRes = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                    messages: [{ role: "system", content: "Sen bir prompt mühendisisin. Sana gelen Türkçe isteği sadece İngilizce, detaylı ve sanatsal bir resim oluşturma promptuna çevir. Sadece İngilizce metni döndür." }, { role: "user", content: prompt }],
+                    model: "llama-3.3" 
+                })
+            });
+            const aiData = await aiRes.json();
+            const englishPrompt = aiData.choices[0].message.content.trim();
+            console.log("Yeni Prompt:", englishPrompt);
+
+            // 2. ADIM: İngilizce prompt ile resmi çizdir
+            loadingBar.style.width = '60%';
             const response = await fetch(IMG_API_URL, {
                 headers: { "Content-Type": "application/json" },
                 method: "POST",
-                body: JSON.stringify({ inputs: prompt }),
+                body: JSON.stringify({ inputs: englishPrompt }),
             });
+            
             if (!response.ok) throw new Error("API Hatası");
             const blob = await response.blob();
             const imageUrl = URL.createObjectURL(blob);
