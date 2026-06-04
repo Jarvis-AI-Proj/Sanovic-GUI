@@ -232,26 +232,31 @@
         loadingBar.style.width = '20%';
         
         try {
-            // 1. ADIM: Türkçe promptu AI ile kaliteli İngilizce'ye çevir
-            console.log("Prompt iyileştiriliyor...");
+            // 1. ADIM: Prompt Mühendisliği (Süper Detaylı Çeviri)
             const aiRes = await fetch(API_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
-                    messages: [{ role: "system", content: "Sen bir prompt mühendisisin. Sana gelen Türkçe isteği sadece İngilizce, detaylı ve sanatsal bir resim oluşturma promptuna çevir. Sadece İngilizce metni döndür." }, { role: "user", content: prompt }],
+                    messages: [{ 
+                        role: "system", 
+                        content: "Sen profesyonel bir prompt mühendisisin. Kullanıcının basit isteğini (örn: uzay gemisi) al ve onu dünyanın en iyi resim modelleri (Flux, Midjourney) için inanılmaz detaylı, sanatsal, ışıklandırma ve teknik detaylar içeren bir İngilizce prompta dönüştür. Sadece İngilizce prompt metnini döndür." 
+                    }, { role: "user", content: prompt }],
                     model: "llama-3.3" 
                 })
             });
             const aiData = await aiRes.json();
             const englishPrompt = aiData.choices[0].message.content.trim();
-            console.log("Yeni Prompt:", englishPrompt);
+            console.log("Mükemmel Prompt:", englishPrompt);
 
-            // 2. ADIM: İngilizce prompt ile resmi çizdir
+            // 2. ADIM: Gelişmiş Prompt ile Çizim
             loadingBar.style.width = '60%';
             const response = await fetch(IMG_API_URL, {
                 headers: { "Content-Type": "application/json" },
                 method: "POST",
-                body: JSON.stringify({ inputs: englishPrompt }),
+                body: JSON.stringify({ 
+                    inputs: englishPrompt,
+                    parameters: { guidance_scale: 7.5, num_inference_steps: 50 } 
+                }),
             });
             
             if (!response.ok) throw new Error("API Hatası");
