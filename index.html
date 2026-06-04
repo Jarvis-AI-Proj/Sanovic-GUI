@@ -149,34 +149,24 @@
                    .trim();
     }
 
-    function speak(text) {
-        if (!window.speechSynthesis) return;
+    async function speak(text) {
+        if (!text) return;
         
-        // Önceki sesleri temizle
-        window.speechSynthesis.cancel();
+        try {
+            const response = await fetch('/api/tts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            });
 
-        const utterance = new SpeechSynthesisUtterance(text);
-        
-        // Mevcut sesleri al ve Türkçe olanı seçmeye çalış
-        let voices = window.speechSynthesis.getVoices();
-        let trVoice = voices.find(v => v.lang.includes('tr-TR') || v.lang.includes('tr'));
-        
-        if (trVoice) {
-            utterance.voice = trVoice;
-        }
-        
-        utterance.lang = 'tr-TR';
-        utterance.rate = 1;
-        utterance.pitch = 1;
+            if (!response.ok) throw new Error("TTS Hatası");
 
-        window.speechSynthesis.speak(utterance);
-    }
-
-    // Ses motorunu hazırla (Linux/Arch için önemli)
-    if (window.speechSynthesis) {
-        window.speechSynthesis.getVoices();
-        if (window.speechSynthesis.onvoiceschanged !== undefined) {
-            window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const audio = new Audio(url);
+            audio.play();
+        } catch (e) {
+            console.error("TTS failed:", e);
         }
     }
 
@@ -189,10 +179,10 @@
             const cleanedText = cleanResponse(text);
             div.innerHTML = parseMarkdown(cleanedText);
             
-            // Profesyonel SVG Hoparlör Butonu
+            // Profesyonel SVG Hoparlör Butonu (Daha yukarıda)
             const speakBtn = document.createElement('button');
             speakBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>';
-            speakBtn.style.cssText = "background:none; border:none; color:#58a6ff; cursor:pointer; position:absolute; top:8px; right:12px; opacity:0.6; transition:0.2s; padding:0;";
+            speakBtn.style.cssText = "background:none; border:none; color:#58a6ff; cursor:pointer; position:absolute; top:4px; right:10px; opacity:0.6; transition:0.2s; padding:0;";
             speakBtn.onclick = () => speak(cleanedText);
             speakBtn.onmouseover = () => speakBtn.style.opacity = '1';
             speakBtn.onmouseout = () => speakBtn.style.opacity = '0.6';
