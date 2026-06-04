@@ -70,14 +70,32 @@
     function cleanResponse(t) { return t.replace(/[^a-zA-ZçÇğĞıİöÖşŞüÜ0-9\s.,!?:;'"\-]/g, '').replace(/[_]/g, '').trim(); }
 
     function speak(text) {
-        if (!window.speechSynthesis) return;
+        if (!window.speechSynthesis) {
+            console.error("Tarayıcı TTS desteklemiyor.");
+            return;
+        }
+        
+        // Önceki her şeyi sustur
         window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(text);
-        const v = window.speechSynthesis.getVoices();
-        const tr = v.find(s => s.lang.includes('tr'));
-        if (tr) u.voice = tr;
-        u.lang = 'tr-TR';
-        window.speechSynthesis.speak(u);
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'tr-TR';
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+
+        // Firefox/Linux için ses listesini zorla kontrol et
+        const voices = window.speechSynthesis.getVoices();
+        const trVoice = voices.find(v => v.lang.includes('tr'));
+        if (trVoice) utterance.voice = trVoice;
+
+        utterance.onerror = (event) => {
+            console.error("TTS Hatası:", event.error);
+            alert("Ses motoru hatası: " + event.error);
+        };
+
+        utterance.onstart = () => console.log("Konuşma başladı...");
+        
+        window.speechSynthesis.speak(utterance);
     }
 
     function addMessage(role, text, save = true) {
