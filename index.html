@@ -142,10 +142,10 @@
     }
 
     function cleanResponse(text) {
-        // Alttire (_) ve Çince/diğer yabancı karakterleri sil
-        // Sadece Türkçe alfabesi, rakamlar ve noktalama işaretlerine izin ver
-        return text.replace(/[_]/g, '') // Alttireleri temizle
-                   .replace(/[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]/g, '') // Çince karakterleri temizle
+        // Sadece Türkçe karakterler, rakamlar, temel noktalama ve boşluğa izin ver
+        // [^\p{L}\p{N}\p{P}\p{Z}] regex'i ile tüm özel sembolleri, kareleri ve yabancı karakterleri temizle
+        return text.replace(/[^a-zA-ZçÇğĞıİöÖşŞüÜ0-9\s.,!?:;'"\-]/g, '')
+                   .replace(/[_]/g, '')
                    .trim();
     }
 
