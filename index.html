@@ -110,7 +110,7 @@
             const blob = await response.blob(); const url = URL.createObjectURL(blob);
             const html = `<div class="image-result" CLASS="IMAGE-RESULT"><div style="display:flex;justify-content:space-between;align-items:center;"><span>Görsel: <strong>${escapeHTML(prompt)}</strong></span><a href="${url}" download="jarvis.jpg" style="color:#3fb950;text-decoration:none;font-size:12px;font-weight:bold;border:1px solid #238636;padding:4px 8px;border-radius:4px;">İNDİR</a></div><img src="${url}" onload="this.parentElement.scrollIntoView();"></div>`;
             addMessage('jarvis', html);
-        } catch (e) { addMessage('jarvis', `Hata: ${e.message}`); }
+        } catch (e) { addMessage('jarvis', `❌ Hata: ${e.message}`); }
         finally { loadingBar.style.width = '100%'; setTimeout(() => { loadingBar.style.display = 'none'; }, 400); }
     }
 
@@ -120,11 +120,17 @@
             const english = await translatePrompt(prompt, "Translate music description to professional English music prompt. Only return English.");
             loadingBar.style.width = '50%';
             const response = await fetch(MUSIC_API_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt: english }) });
-            if (!response.ok) throw new Error("Müzik üretilemedi.");
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({ error: "Vercel yanit vermedi." }));
+                throw new Error(errData.error || `Hata: ${response.status}`);
+            }
             const blob = await response.blob(); const url = URL.createObjectURL(blob);
-            const html = `<div class="audio-result" CLASS="AUDIO-RESULT"><div style="display:flex;justify-content:space-between;align-items:center;"><span>Müzik: <strong>${escapeHTML(prompt)}</strong></span><a href="${url}" download="jarvis.wav" style="color:#58a6ff;text-decoration:none;font-size:12px;font-weight:bold;border:1px solid #30363d;padding:4px 8px;border-radius:4px;">İNDİR</a></div><audio controls src="${url}"></audio></div>`;
+            const html = `<div class="audio-result" CLASS="AUDIO-RESULT"><div style="display:flex;justify-content:space-between;align-items:center;"><span>Müzik: <strong>${escapeHTML(prompt)}</strong></span><a href="${url}" download="jarvis-music.wav" style="color:#58a6ff;text-decoration:none;font-size:12px;font-weight:bold;border:1px solid #30363d;padding:4px 8px;border-radius:4px;">İNDİR</a></div><audio controls src="${url}"></audio></div>`;
             addMessage('jarvis', html);
-        } catch (e) { addMessage('jarvis', `Hata: ${e.message}`); }
+        } catch (e) { 
+            addMessage('jarvis', `❌ Müzik Hatası: ${e.message}`);
+            if (e.message.includes("503")) addMessage('jarvis', 'Bilgi: Model yükleniyor, 15 saniye sonra tekrar deneyin.', false);
+        }
         finally { loadingBar.style.width = '100%'; setTimeout(() => { loadingBar.style.display = 'none'; }, 400); }
     }
 
@@ -140,11 +146,14 @@
             const compressed = await compressImage(file);
             loadingBar.style.width = '50%';
             const response = await fetch(EDIT_API_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ image: compressed, prompt: english }) });
-            if (!response.ok) throw new Error("Düzenleme başarısız.");
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({ error: "Vercel zaman aşımı." }));
+                throw new Error(errData.error || `Hata: ${response.status}`);
+            }
             const blob = await response.blob(); const url = URL.createObjectURL(blob);
             const html = `<div class="image-result" CLASS="IMAGE-RESULT"><div style="display:flex;justify-content:space-between;align-items:center;"><span>Düzenlendi: <strong>${escapeHTML(prompt)}</strong></span><a href="${url}" download="edit.jpg" style="color:#3fb950;text-decoration:none;font-size:12px;font-weight:bold;border:1px solid #238636;padding:4px 8px;border-radius:4px;">İNDİR</a></div><img src="${url}" onload="this.parentElement.scrollIntoView();"></div>`;
             addMessage('jarvis', html);
-        } catch (e) { addMessage('jarvis', `Hata: ${e.message}`); }
+        } catch (e) { addMessage('jarvis', `❌ Düzenleme Hatası: ${e.message}`); }
         finally { loadingBar.style.width = '100%'; setTimeout(() => { loadingBar.style.display = 'none'; }, 400); }
     }
 
