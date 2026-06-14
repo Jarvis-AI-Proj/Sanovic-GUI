@@ -51,9 +51,15 @@
         <div style="position: relative;">
             <button id="mode-btn" class="img-btn" onclick="toggleModeOverlay()"><svg id="pen-icon" viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg><svg id="close-icon" viewBox="0 0 24 24" width="22" height="22" fill="currentColor" style="display:none;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
             <div id="mode-overlay" style="display:none; position: absolute; bottom: 40px; left: 0; background: #161b22; border: 1px solid #30363d; border-radius: 8px; width: 300px; padding: 10px; z-index: 100;">
-                <div style="padding: 10px; cursor: pointer; border-bottom: 1px solid #30363d;" onclick="selectMode('drawing')"><strong>Çizim modu</strong><br><small style="color:#8b949e;">Jarvis profesyonel promptlar ile çizim yapar.</small></div>
-                <div style="padding: 10px; cursor: pointer; border-bottom: 1px solid #30363d;" onclick="selectMode('editing')"><strong>Düzenleme modu</strong><br><small style="color:#8b949e;">Fotoğraflarınızı AI ile düzenler.</small></div>
-                <div style="padding: 10px; cursor: pointer;" onclick="selectMode('music')"><strong>Müzik modu</strong><br><small style="color:#8b949e;">Jarvis hayalindeki müziği besteler.</small></div>
+                <div style="padding: 10px; cursor: pointer; border-bottom: 1px solid #30363d;" onclick="selectMode('drawing')">
+                    <strong>Çizim modu</strong><br><small style="color:#8b949e;">Jarvis bu modda sadece çizim yapar. Bu modda normal metin konuşması gibi yazarsanız, rastgele bir resim üretir.</small>
+                </div>
+                <div style="padding: 10px; cursor: pointer; border-bottom: 1px solid #30363d;" onclick="selectMode('editing')">
+                    <strong>Düzenleme modu</strong><br><small style="color:#8b949e;">Jarvis bu modda sadece fotoğraf düzenler. Bu modda normal metin konuşması gibi yazarsanız, fotoğrafınızı kendisine göre düzenler.</small>
+                </div>
+                <div style="padding: 10px; cursor: pointer;" onclick="selectMode('music')">
+                    <strong>Müzik modu</strong><br><small style="color:#8b949e;">Jarvis bu modda sadece müzik besteler. Bu modda normal metin konuşması gibi yazarsanız, rastgele bir melodi üretir.</small>
+                </div>
             </div>
         </div>
         <input type="text" id="user-input" placeholder="Aklınızda ne var?" autocomplete="off">
@@ -129,19 +135,44 @@
         finally { loadingBar.style.width = '100%'; setTimeout(() => { loadingBar.style.display = 'none'; }, 400); }
     }
 
+    async function generateEdit(prompt, file) {
+        if (!prompt || !file) return;
+        loadingBar.style.display = 'block'; loadingBar.style.width = '30%';
+        try {
+            const reader = new FileReader(); reader.readAsDataURL(file);
+            reader.onload = async () => {
+                const base64Image = reader.result;
+                const response = await fetch(EDIT_API_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ image: base64Image, prompt: prompt }) });
+                if (!response.ok) throw new Error("Düzenleme Hatası");
+                const blob = await response.blob(); const url = URL.createObjectURL(blob);
+                const html = `<div class="image-result" CLASS="IMAGE-RESULT"><div style="display:flex;justify-content:space-between;align-items:center;"><span>Düzenlendi: <strong>${escapeHTML(prompt)}</strong></span><a href="${url}" download="jarvis-edit.jpg" style="color:#3fb950;text-decoration:none;font-size:12px;font-weight:bold;border:1px solid #238636;padding:4px 8px;border-radius:4px;">İNDİR</a></div><img src="${url}" onload="this.parentElement.scrollIntoView();"></div>`;
+                addMessage('jarvis', html);
+            };
+        } catch (e) { addMessage('jarvis', `Hata: ${e.message}`); }
+        finally { loadingBar.style.width = '100%'; setTimeout(() => { loadingBar.style.display = 'none'; }, 400); }
+    }
+
+    function triggerImageGen() { const val = userInput.value.trim(); if (val) { addMessage('user', `/img ${val}`); userInput.value = ''; generateImage(val); } }
+    function toggleModeOverlay() { if (activeMode) { activeMode = null; document.getElementById('pen-icon').style.display='block'; document.getElementById('close-icon').style.display='none'; userInput.placeholder="Aklınızda ne var?"; document.getElementById('mode-overlay').style.display='none'; } else { const o = document.getElementById('mode-overlay'); o.style.display = (o.style.display === 'none') ? 'block' : 'none'; } }
+    function selectMode(m) { 
+        activeMode = m; document.getElementById('pen-icon').style.display='none'; document.getElementById('close-icon').style.display='block'; 
+        const names = {drawing: 'Çizim', editing: 'Düzenleme', music: 'Müzik'};
+        userInput.placeholder = `${names[m]} modu aktif...`; 
+        document.getElementById('mode-overlay').style.display='none'; 
+    }
+
     async function handleSend() {
         const val = userInput.value.trim(); if (!val && !activeFile) return;
+        if (activeMode && ["merhaba", "selam", "naber"].some(k => val.toLowerCase().includes(k))) { addMessage('user', val); userInput.value = ''; addMessage('jarvis', 'Moddan çıkmak için (X) basın.'); return; }
         if (activeMode === 'music') { addMessage('user', val); userInput.value = ''; generateMusic(val); return; }
-        if (activeMode === 'editing') { if (!activeFile) { addMessage('jarvis', 'Dosya yükleyin.'); return; } addMessage('user', val); userInput.value = ''; addMessage('jarvis', 'Düzenleme yapılıyor...'); return; }
+        if (activeMode === 'editing') { if (!activeFile) { addMessage('jarvis', 'Önce fotoğraf yükleyin.'); return; } addMessage('user', val); userInput.value = ''; generateEdit(val, activeFile); return; }
         if (activeMode === 'drawing' || val.toLowerCase().includes("çiz")) { addMessage('user', val); userInput.value = ''; generateImage(val.replace(/çiz/gi, '').trim() || val); return; }
         addMessage('user', val); userInput.value = ''; history.push({ role: "user", content: val });
         try {
             const res = await fetch(API_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: history, model: "llama-3.3" }) });
             const data = await res.json(); addMessage('jarvis', data.choices[0].message.content);
-        } catch (e) { addMessage('jarvis', "Hata."); }
+        } catch (e) { addMessage('jarvis', "Hata oluştu."); }
     }
-    function toggleModeOverlay() { if (activeMode) { activeMode = null; document.getElementById('pen-icon').style.display='block'; document.getElementById('close-icon').style.display='none'; userInput.placeholder="Aklınızda ne var?"; document.getElementById('mode-overlay').style.display='none'; } else { const o = document.getElementById('mode-overlay'); o.style.display = (o.style.display === 'none') ? 'block' : 'none'; } }
-    function selectMode(m) { activeMode = m; document.getElementById('pen-icon').style.display='none'; document.getElementById('close-icon').style.display='block'; userInput.placeholder = `${m} aktif...`; document.getElementById('mode-overlay').style.display='none'; }
     userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSend(); });
     window.onload = () => { addMessage('jarvis', 'Merhaba. Ben Jarvis. Nasıl yardımcı olabilirim?', false); if (window.speechSynthesis) window.speechSynthesis.getVoices(); };
 </script>
