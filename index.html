@@ -62,7 +62,7 @@
 </div>
 <script>
     const chatBox = document.getElementById('chat-box'), userInput = document.getElementById('user-input'), loadingBar = document.getElementById('loading-bar'), fileInfo = document.getElementById('file-info');
-    const API_URL = "https://jarvis-omega-eosin.vercel.app/api/chat", IMG_API_URL = "https://jarvis-kappa-silk.vercel.app/api/generate", EDIT_API_URL = "https://jarvis-kappa-silk.vercel.app/api/edit", MUSIC_API_URL = "https://jarvis-kappa-silk.vercel.app/api/music", TTS_API_URL = "https://jarvis-kappa-silk.vercel.app/api/tts";
+    const API_URL = "https://jarvis-omega-eosin.vercel.app/api/chat", IMG_API_URL = "https://jarvis-kappa-silk.vercel.app/api/generate", EDIT_API_URL = "https://jarvis-kappa-silk.vercel.app/api/edit", MUSIC_API_URL = "https://jarvis-m.vercel.app/api/music", TTS_API_URL = "https://jarvis-kappa-silk.vercel.app/api/tts";
     let history = [], activeFile = null, activeMode = null;
 
     function escapeHTML(str) { return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m])); }
@@ -118,20 +118,33 @@
         if (!prompt) return; loadingBar.style.display = 'block'; loadingBar.style.width = '20%';
         try {
             const english = await translatePrompt(prompt, "Translate music description to professional English music prompt. Only return English.");
-            loadingBar.style.width = '50%';
+            loadingBar.style.width = '30%';
+            // Replicate Başlat
             const response = await fetch(MUSIC_API_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt: english }) });
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({ error: "Vercel yanit vermedi." }));
-                throw new Error(errData.error || `Hata: ${response.status}`);
-            }
-            const blob = await response.blob(); const url = URL.createObjectURL(blob);
-            const html = `<div class="audio-result" CLASS="AUDIO-RESULT"><div style="display:flex;justify-content:space-between;align-items:center;"><span>Müzik: <strong>${escapeHTML(prompt)}</strong></span><a href="${url}" download="jarvis-music.wav" style="color:#58a6ff;text-decoration:none;font-size:12px;font-weight:bold;border:1px solid #30363d;padding:4px 8px;border-radius:4px;">İNDİR</a></div><audio controls src="${url}"></audio></div>`;
-            addMessage('jarvis', html);
-        } catch (e) { 
-            addMessage('jarvis', `❌ Müzik Hatası: ${e.message}`);
-            if (e.message.includes("503")) addMessage('jarvis', 'Bilgi: Model yükleniyor, 15 saniye sonra tekrar deneyin.', false);
-        }
-        finally { loadingBar.style.width = '100%'; setTimeout(() => { loadingBar.style.display = 'none'; }, 400); }
+            let data = await response.json();
+            if (!response.ok) throw new Error(data.error || "Müzik başlatılamadı.");
+
+            const pollUrl = data.urls.get;
+            const apiKey = data.apiKey; // API tarafında gönderdiğimiz anahtar
+
+            // POLLING (DÖNGÜ)
+            const checkStatus = async () => {
+                const res = await fetch(pollUrl, { headers: { "Authorization": `Token ${apiKey}` } });
+                const result = await res.json();
+                if (result.status === "succeeded") {
+                    const url = result.output;
+                    const html = `<div class="audio-result" CLASS="AUDIO-RESULT"><div style="display:flex;justify-content:space-between;align-items:center;"><span>Müzik: <strong>${escapeHTML(prompt)}</strong></span><a href="${url}" download="jarvis-music.wav" style="color:#58a6ff;text-decoration:none;font-size:12px;font-weight:bold;border:1px solid #30363d;padding:4px 8px;border-radius:4px;">İNDİR</a></div><audio controls src="${url}"></audio></div>`;
+                    addMessage('jarvis', html);
+                    loadingBar.style.width = '100%'; setTimeout(() => { loadingBar.style.display = 'none'; }, 400);
+                } else if (result.status === "failed") {
+                    throw new Error("Müzik üretimi başarısız oldu.");
+                } else {
+                    console.log("Müzik işleniyor...");
+                    setTimeout(checkStatus, 3000); // 3 saniyede bir sor
+                }
+            };
+            checkStatus();
+        } catch (e) { addMessage('jarvis', `❌ Müzik Hatası: ${e.message}`); loadingBar.style.display = 'none'; }
     }
 
     function compressImage(file) {
@@ -146,10 +159,7 @@
             const compressed = await compressImage(file);
             loadingBar.style.width = '50%';
             const response = await fetch(EDIT_API_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ image: compressed, prompt: english }) });
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({ error: "Vercel zaman aşımı." }));
-                throw new Error(errData.error || `Hata: ${response.status}`);
-            }
+            if (!response.ok) { const err = await response.json(); throw new Error(err.error || "Düzenleme başarısız."); }
             const blob = await response.blob(); const url = URL.createObjectURL(blob);
             const html = `<div class="image-result" CLASS="IMAGE-RESULT"><div style="display:flex;justify-content:space-between;align-items:center;"><span>Düzenlendi: <strong>${escapeHTML(prompt)}</strong></span><a href="${url}" download="edit.jpg" style="color:#3fb950;text-decoration:none;font-size:12px;font-weight:bold;border:1px solid #238636;padding:4px 8px;border-radius:4px;">İNDİR</a></div><img src="${url}" onload="this.parentElement.scrollIntoView();"></div>`;
             addMessage('jarvis', html);
