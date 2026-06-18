@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jarvis</title>
+    <title>Sanovic</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #0d1117; color: #c9d1d9; font-family: -apple-system, system-ui, sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -16,8 +16,8 @@
         #chat-box { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background-color: #0d1117; scroll-behavior: smooth; }
         .msg { max-width: 85%; padding: 12px 16px; border-radius: 14px; font-size: 14.5px; line-height: 1.6; word-wrap: break-word; }
         .user { align-self: flex-end; background-color: #1f6feb; color: white; border-bottom-right-radius: 2px; }
-        .jarvis { align-self: flex-start; background-color: #21262d; border: 1px solid #30363d; border-bottom-left-radius: 2px; padding-right: 40px; position: relative; }
-        .jarvis strong { color: #58a6ff; font-weight: 700; }
+        .sanovic { align-self: flex-start; background-color: #21262d; border: 1px solid #30363d; border-bottom-left-radius: 2px; padding-right: 40px; position: relative; }
+        .sanovic strong { color: #58a6ff; font-weight: 700; }
         .code-container { background: #0d1117; border: 1px solid #30363d; border-radius: 8px; margin: 12px 0; overflow: hidden; width: 100%; }
         .code-header { background: #161b22; padding: 8px 12px; font-size: 11px; color: #8b949e; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; }
         pre { padding: 15px; overflow-x: auto; font-family: 'Consolas', monospace; margin: 0; }
@@ -40,7 +40,7 @@
     </style>
 </head>
 <body>
-<header><h1>JARVIS</h1><div class="header-btns"><button class="h-btn load-btn" onclick="loadChat()">Yükle</button><button class="h-btn" onclick="clearChat()">Sıfırla</button></div><div id="loading-bar"></div></header>
+<header><h1>SANOVIC</h1><div class="header-btns"><button class="h-btn load-btn" onclick="loadChat()">Yükle</button><button class="h-btn" onclick="clearChat()">Sıfırla</button></div><div id="loading-bar"></div></header>
 <div id="chat-box"></div>
 <div class="input-area">
     <div id="file-info"></div>
@@ -51,8 +51,8 @@
         <div style="position: relative;">
             <button id="mode-btn" class="img-btn" onclick="toggleModeOverlay()"><svg id="pen-icon" viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg><svg id="close-icon" viewBox="0 0 24 24" width="22" height="22" fill="currentColor" style="display:none;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
             <div id="mode-overlay" style="display:none; position: absolute; bottom: 40px; left: 0; background: #161b22; border: 1px solid #30363d; border-radius: 8px; width: 300px; padding: 10px; z-index: 100;">
-                <div style="padding: 10px; cursor: pointer; border-bottom: 1px solid #30363d;" onclick="selectMode('drawing')"><strong>Çizim modu</strong><br><small style="color:#8b949e;">Jarvis bu modda sadece çizim yapar. Bu modda normal metin konuşması gibi yazarsanız, rastgele bir resim üretir.</small></div>
-                <div style="padding: 10px; cursor: pointer; border-bottom: 1px solid #30363d;" onclick="selectMode('editing')"><strong>Düzenleme modu</strong><br><small style="color:#8b949e;">Jarvis bu modda sadece fotoğraf düzenler. Bu modda normal metin konuşması gibi yazarsanız, fotoğrafınızı kendisine göre düzenler.</small></div>
+                <div style="padding: 10px; cursor: pointer; border-bottom: 1px solid #30363d;" onclick="selectMode('drawing')"><strong>Çizim modu</strong><br><small style="color:#8b949e;">Sanovic bu modda sadece çizim yapar. Bu modda normal metin konuşması gibi yazarsanız, rastgele bir resim üretir.</small></div>
+                <div style="padding: 10px; cursor: pointer; border-bottom: 1px solid #30363d;" onclick="selectMode('editing')"><strong>Düzenleme modu</strong><br><small style="color:#8b949e;">Sanovic bu modda sadece fotoğraf düzenler. Bu modda normal metin konuşması gibi yazarsanız, fotoğrafınızı kendisine göre düzenler.</small></div>
             </div>
         </div>
         <input type="text" id="user-input" placeholder="Aklınızda ne var?" autocomplete="off">
@@ -77,7 +77,7 @@
 
     function addMessage(role, text, save = true) {
         const div = document.createElement('div'); div.className = `msg ${role}`;
-        if (role === 'jarvis') {
+        if (role === 'sanovic') {
             if (text.includes('IMAGE-RESULT') || text.includes('AUDIO-RESULT')) { div.innerHTML = text; } 
             else {
                 const cleaned = cleanResponse(text); div.innerHTML = parseMarkdown(cleaned);
@@ -90,9 +90,9 @@
         if (save) saveToLocal();
     }
 
-    function saveToLocal() { localStorage.setItem('jarvis_history', JSON.stringify(history)); localStorage.setItem('jarvis_html', chatBox.innerHTML); }
-    function loadChat() { const h = localStorage.getItem('jarvis_html'), hi = localStorage.getItem('jarvis_history'); if (h && hi) { chatBox.innerHTML = h; history = JSON.parse(hi); chatBox.scrollTop = chatBox.scrollHeight; } }
-    function clearChat() { if(confirm("Silinsin mi?")) { localStorage.clear(); chatBox.innerHTML = ''; history = []; addMessage('jarvis', 'Merhaba. Ben Jarvis. Nasıl yardımcı olabilirim?', false); } }
+    function saveToLocal() { localStorage.setItem('sanovic_history', JSON.stringify(history)); localStorage.setItem('sanovic_html', chatBox.innerHTML); }
+    function loadChat() { const h = localStorage.getItem('sanovic_html'), hi = localStorage.getItem('sanovic_history'); if (h && hi) { chatBox.innerHTML = h; history = JSON.parse(hi); chatBox.scrollTop = chatBox.scrollHeight; } }
+    function clearChat() { if(confirm("Silinsin mi?")) { localStorage.clear(); chatBox.innerHTML = ''; history = []; addMessage('sanovic', 'Merhaba. Ben Sanovic. Nasıl yardımcı olabilirim?', false); } }
 
     async function translatePrompt(prompt, system) {
         const res = await fetch(API_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: [{ role: "system", content: system }, { role: "user", content: prompt }], model: "llama-3.3" }) });
@@ -107,9 +107,9 @@
             const response = await fetch(IMG_API_URL, { headers: { "Content-Type": "application/json" }, method: "POST", body: JSON.stringify({ inputs: english }) });
             if (!response.ok) throw new Error("API Hatası");
             const blob = await response.blob(); const url = URL.createObjectURL(blob);
-            const html = `<div class="image-result" CLASS="IMAGE-RESULT"><div style="display:flex;justify-content:space-between;align-items:center;"><span>Görsel: <strong>${escapeHTML(prompt)}</strong></span><a href="${url}" download="jarvis.jpg" style="color:#3fb950;text-decoration:none;font-size:12px;font-weight:bold;border:1px solid #238636;padding:4px 8px;border-radius:4px;">İNDİR</a></div><img src="${url}" onload="this.parentElement.scrollIntoView();"></div>`;
-            addMessage('jarvis', html);
-        } catch (e) { addMessage('jarvis', `❌ Hata: ${e.message}`); }
+            const html = `<div class="image-result" CLASS="IMAGE-RESULT"><div style="display:flex;justify-content:space-between;align-items:center;"><span>Görsel: <strong>${escapeHTML(prompt)}</strong></span><a href="${url}" download="sanovic.jpg" style="color:#3fb950;text-decoration:none;font-size:12px;font-weight:bold;border:1px solid #238636;padding:4px 8px;border-radius:4px;">İNDİR</a></div><img src="${url}" onload="this.parentElement.scrollIntoView();"></div>`;
+            addMessage('sanovic', html);
+        } catch (e) { addMessage('sanovic', `❌ Hata: ${e.message}`); }
         finally { loadingBar.style.width = '100%'; setTimeout(() => { loadingBar.style.display = 'none'; }, 400); }
     }
 
@@ -132,8 +132,8 @@
                 const result = await res.json();
                 if (result.status === "succeeded") {
                     const url = result.output;
-                    const html = `<div class="audio-result" CLASS="AUDIO-RESULT"><div style="display:flex;justify-content:space-between;align-items:center;"><span>Müzik: <strong>${escapeHTML(prompt)}</strong></span><a href="${url}" download="jarvis-music.wav" style="color:#58a6ff;text-decoration:none;font-size:12px;font-weight:bold;border:1px solid #30363d;padding:4px 8px;border-radius:4px;">İNDİR</a></div><audio controls src="${url}"></audio></div>`;
-                    addMessage('jarvis', html);
+                    const html = `<div class="audio-result" CLASS="AUDIO-RESULT"><div style="display:flex;justify-content:space-between;align-items:center;"><span>Müzik: <strong>${escapeHTML(prompt)}</strong></span><a href="${url}" download="sanovic-music.wav" style="color:#58a6ff;text-decoration:none;font-size:12px;font-weight:bold;border:1px solid #30363d;padding:4px 8px;border-radius:4px;">İNDİR</a></div><audio controls src="${url}"></audio></div>`;
+                    addMessage('sanovic', html);
                     loadingBar.style.width = '100%'; setTimeout(() => { loadingBar.style.display = 'none'; }, 400);
                 } else if (result.status === "failed") {
                     throw new Error("Müzik üretimi başarısız oldu.");
@@ -143,7 +143,7 @@
                 }
             };
             checkStatus();
-        } catch (e) { addMessage('jarvis', `❌ Müzik Hatası: ${e.message}`); loadingBar.style.display = 'none'; }
+        } catch (e) { addMessage('sanovic', `❌ Müzik Hatası: ${e.message}`); loadingBar.style.display = 'none'; }
     }
 
     function compressImage(file) {
@@ -161,29 +161,29 @@
             if (!response.ok) { const err = await response.json(); throw new Error(err.error || "Düzenleme başarısız."); }
             const blob = await response.blob(); const url = URL.createObjectURL(blob);
             const html = `<div class="image-result" CLASS="IMAGE-RESULT"><div style="display:flex;justify-content:space-between;align-items:center;"><span>Düzenlendi: <strong>${escapeHTML(prompt)}</strong></span><a href="${url}" download="edit.jpg" style="color:#3fb950;text-decoration:none;font-size:12px;font-weight:bold;border:1px solid #238636;padding:4px 8px;border-radius:4px;">İNDİR</a></div><img src="${url}" onload="this.parentElement.scrollIntoView();"></div>`;
-            addMessage('jarvis', html);
-        } catch (e) { addMessage('jarvis', `❌ Düzenleme Hatası: ${e.message}`); }
+            addMessage('sanovic', html);
+        } catch (e) { addMessage('sanovic', `❌ Düzenleme Hatası: ${e.message}`); }
         finally { loadingBar.style.width = '100%'; setTimeout(() => { loadingBar.style.display = 'none'; }, 400); }
     }
 
     async function handleSend() {
         const val = userInput.value.trim(); if (!val && !activeFile) return;
-        if (activeMode && ["merhaba", "selam", "naber"].some(k => val.toLowerCase().includes(k))) { addMessage('user', val); userInput.value = ''; addMessage('jarvis', 'Moddan çıkmak için (X) basın.'); return; }
+        if (activeMode && ["merhaba", "selam", "naber"].some(k => val.toLowerCase().includes(k))) { addMessage('user', val); userInput.value = ''; addMessage('sanovic', 'Moddan çıkmak için (X) basın.'); return; }
         if (activeMode === 'music') { addMessage('user', val); userInput.value = ''; generateMusic(val); return; }
-        if (activeMode === 'editing') { if (!activeFile) { addMessage('jarvis', 'Önce fotoğraf yükleyin.'); return; } addMessage('user', val); userInput.value = ''; generateEdit(val, activeFile); return; }
+        if (activeMode === 'editing') { if (!activeFile) { addMessage('sanovic', 'Önce fotoğraf yükleyin.'); return; } addMessage('user', val); userInput.value = ''; generateEdit(val, activeFile); return; }
         if (activeMode === 'drawing' || val.toLowerCase().includes("çiz")) { addMessage('user', val); userInput.value = ''; generateImage(val.replace(/çiz/gi, '').trim() || val); return; }
         addMessage('user', val); userInput.value = ''; history.push({ role: "user", content: val });
         try {
             loadingBar.style.display = 'block'; loadingBar.style.width = '50%';
             const res = await fetch(API_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: history, model: "llama-3.3" }) });
-            const data = await res.json(); addMessage('jarvis', data.choices[0].message.content); history.push({ role: "assistant", content: data.choices[0].message.content });
-        } catch (e) { addMessage('jarvis', "Bağlantı koptu."); }
+            const data = await res.json(); addMessage('sanovic', data.choices[0].message.content); history.push({ role: "assistant", content: data.choices[0].message.content });
+        } catch (e) { addMessage('sanovic', "Bağlantı koptu."); }
         finally { loadingBar.style.width = '100%'; setTimeout(() => { loadingBar.style.display = 'none'; }, 400); }
     }
     function toggleModeOverlay() { if (activeMode) { activeMode = null; document.getElementById('pen-icon').style.display='block'; document.getElementById('close-icon').style.display='none'; userInput.placeholder="Aklınızda ne var?"; document.getElementById('mode-overlay').style.display='none'; } else { const o = document.getElementById('mode-overlay'); o.style.display = (o.style.display === 'none') ? 'block' : 'none'; } }
     function selectMode(m) { activeMode = m; document.getElementById('pen-icon').style.display='none'; document.getElementById('close-icon').style.display='block'; const n = {drawing: 'Çizim', editing: 'Düzenleme', music: 'Müzik'}; userInput.placeholder = `${n[m]} modu aktif...`; document.getElementById('mode-overlay').style.display='none'; }
     userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSend(); });
-    window.onload = () => { addMessage('jarvis', 'Merhaba. Ben Jarvis. Nasıl yardımcı olabilirim?', false); if (window.speechSynthesis) window.speechSynthesis.getVoices(); };
+    window.onload = () => { addMessage('sanovic', 'Merhaba. Ben Sanovic. Nasıl yardımcı olabilirim?', false); if (window.speechSynthesis) window.speechSynthesis.getVoices(); };
 </script>
 </body>
 </html>
